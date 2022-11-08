@@ -1,0 +1,67 @@
+.dash {
+    margin: 15px auto 0;
+    display: grid;
+    grid-template-areas: 
+        "pitch gyro"
+        "gauge battery"
+        "gauge signal"
+        "mapa mapa";
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1.5fr 1fr 1fr 2fr;
+    width: 80%;
+
+    background: rgba(255, 255, 255, 0.5);
+    padding: 20px 5px 55px;
+    border-radius: 20px;
+}
+
+.dash .pitch {
+    padding: 10px;
+}
+
+.dash .gauge_data {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr 1fr;
+}
+
+.dash .gauge_data .TemperatureContainer {
+    display: grid;
+    grid-template-areas:
+    'icon label'
+    'icon temperature';
+    grid-template-rows: 1fr 5fr;
+}
+
+.dash .gyro {
+    padding: 10px;
+}
+
+.dash .battery {
+    padding: 10px;
+
+    display: flex;
+    flex-direction: column;
+
+}
+
+.dash .battery >div {
+    margin-top: 5px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    align-items: center;
+    width: 100%
+}
+
+.dash .mapOff {
+    width: 100%;
+    height: 100%;
+    background: white;
+    border-radius: 20px;
+    color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
