@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import "./style.css";
 import FeatherIcon from 'feather-icons-react';
 
@@ -61,16 +61,24 @@ const Dash = () => {
         Motor_Speed_RPM: 0,
         Motor_Torque_Nm: 0,
         Motor_Temperature_C: 0,
-        Controller_Temperature_C: 0
+        Controller_Temperature_C: 0,
+        recording: false
     });
     const [ highHistory, setHighHistory ] = useState([]);
 
     const [ pendingResponse, setPendingReponse ] = useState(false);
 
+    //  Last received message states
+    const [ lastHighFreqTime, setLastHighTime ] = useState(null);
+    const [ lastHighMedTime, setLastMedTime ] = useState(null);
+    const [ timer, setTimer ] = useState({ high: 0, medium: 0 });
+
     //  Vehicle and Cell ID coordinates managing
     const [ coordinates, setCoordinates ] = useState({ lat: 0, lng: 0 });
     const [ cellCoordinates, setCellCordinates ] = useState({ lat: 0, lng: 0, range: 0 });
     const [ coordinatesUpdate, setCoordinateUpdate ] = useState( new Date() );
+
+    //  Get coordinates for the cell tower
     useEffect( () => {
         if ( new Date() - coordinatesUpdate > 1000 ) {
             setCoordinates({
@@ -119,9 +127,13 @@ const Dash = () => {
         }
     },[mediumFreq]);
 
-    useEffect( () => {
+    const [ client, setClient ] = useState(null);
+    useEffect( () => setClient( mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } ) ), [] );
 
-        const client =  mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } );
+    //  Subscribe to topics
+    useEffect( () => {
+        // const client = mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } );
+
         if (client) {
 
             client.on( 'connect', () => {
@@ -137,11 +149,13 @@ const Dash = () => {
                     case `${clientID}/MediumFrequency`:
                         setMediumFreq( JSON.parse( payload.toString() ) );
                         setMediumHistory( (prevData) => [ ...prevData, JSON.parse(payload.toString()) ] );
+                        setLastMedTime( Date.now() );
                         break;
                     
                     case `${clientID}/HighFrequency`:
                         setHighFreq( JSON.parse( payload.toString() ) );
                         setHighHistory( (prevData) => [ ...prevData, JSON.parse(payload.toString()) ] );
+                        setLastHighTime( Date.now() );
                         break;
 
                     case `${clientID}/Are_u_talking_to_me?`:
@@ -169,14 +183,69 @@ const Dash = () => {
 
         return () => {
             window.removeEventListener('beforeunload', handleTabClose);  
-            client.publish( `${clientID}/Are_u_talking_to_me?`, "goSleep" );
-            client.end();
+            client && client.publish( `${clientID}/Are_u_talking_to_me?`, "goSleep" );
+            client && client.end();
         }
 
-    }, []);
+    }, [client]);
+
+    //  Recording Toggle refs
+    var ToggleRecordRef = useRef();
+    var ParentDivToggle = useRef();
+
+    const handdleToggleRecording = (e) => {
+
+        if ( client ) {
+            //  start or stop recording data
+            (e.target.checked)
+                ?client.publish(`${clientID}/Are_u_talking_to_me?`, "startRecording")
+                :client.publish(`${clientID}/Are_u_talking_to_me?`, "stopRecording");
+
+            //  Fix the toggle value for the desired state for 5 seconds
+            ToggleRecordRef.current.state.checked = e.target.checked;
+            setTimeout( () => {
+                //  Return to the real state value as well for the input element
+                ToggleRecordRef.current.state.checked = ParentDivToggle.current.children[1].children[2].checked = highFreq.recording;
+
+                //  Sets the propper toggle style
+                (highFreq.recording)
+                    ?( ParentDivToggle.current.children[1].className = "react-toggle react-toggle--checked" )
+                    :( ParentDivToggle.current.children[1].className = "react-toggle" );
+            }, 10000 );
+        }
+    };
+
+    //  Periodically update the timers
+    useEffect( () => {
+        const Period = setInterval( ()=>  {
+            setTimer({
+                high: Math.ceil((Date.now() - lastHighFreqTime) / 1000),
+                medium: Math.ceil((Date.now() - lastHighMedTime) / 1000)
+            });
+        }, 1000);
+
+        return () => clearInterval( Period );
+    }, [timer]);
+
+    //  Sends the mqtt restart message to broker
+    const handdleRefreshESP = (e) => client  && client.publish(`${clientID}/Are_u_talking_to_me?`, "resetUrSelf");
+
+    //  Change state of the Recording toggle every time highFreq.recording changes
+    useEffect(() => handdleToggleRecording({ target: { checked: highFreq.recording }}), [highFreq.recording]);
 
     return(
-        <div className='dash'>
+        <div className='dash' >
+            <div className='TopInfo' style={{gridArea: 'topInfo'}}>
+                <FeatherIcon size={20} icon="refresh-ccw"  style={{ cursor: 'pointer' }} onClick={ handdleRefreshESP } />
+                <div className="last-update" >
+                        <p> Last High frequency packet <br/> { timer.high }s </p>
+                        <p> Last Medium frequency packet <br/> { timer.medium }s </p>
+                </div>
+                <div ref={ParentDivToggle} style={{ display: 'flex', alignItems: 'center', width: '150px', justifyContent: 'space-around' }}>
+                    <label> Record data </label>
+                    <Toggle defaultChecked={highFreq.recording} ref={ToggleRecordRef} onClick={ (e) => handdleToggleRecording(e) } />
+                </div>
+            </div>
             <div className="pitch" style={{gridArea: 'pitch'}}>
                 <Pitch angle={parseInt(highFreq.Pitch)} acc={parseInt(highFreq.Acell_x)} />
             </div>
