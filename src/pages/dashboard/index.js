@@ -134,6 +134,8 @@ const Dash = () => {
     useEffect( () => {
         // const client = mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } );
 
+        var Period;
+
         if (client) {
 
             client.on( 'connect', () => {
@@ -170,7 +172,11 @@ const Dash = () => {
             client.on( 'error', (error) => console.log(error) );
 
             client.publish( `${clientID}/Are_u_talking_to_me?`, "getUp!" );
+
             setPendingReponse(true);
+
+            //  Periodically sends heatbeat signal to microcontroller, so it knows that there is someone still watching the incomming mqtt packets
+            Period = setInterval( () =>  client.publish( `${clientID}/Heartbeat`, "1" ), 5000);
         }
 
         const handleTabClose = ( e ) => {
@@ -182,7 +188,8 @@ const Dash = () => {
         window.addEventListener('beforeunload', handleTabClose );
 
         return () => {
-            window.removeEventListener('beforeunload', handleTabClose);  
+            window.removeEventListener('beforeunload', handleTabClose);
+            Period && clearInterval( Period );
             client && client.publish( `${clientID}/Are_u_talking_to_me?`, "goSleep" );
             client && client.end();
         }
@@ -238,8 +245,8 @@ const Dash = () => {
             <div className='TopInfo' style={{gridArea: 'topInfo'}}>
                 <FeatherIcon size={20} icon="refresh-ccw"  style={{ cursor: 'pointer' }} onClick={ handdleRefreshESP } />
                 <div className="last-update" >
-                        <p> Last High frequency packet <br/> { timer.high }s </p>
-                        <p> Last Medium frequency packet <br/> { timer.medium }s </p>
+                        <p> Last High frequency packet <br/> { ( timer.high > 50 )?'+50':timer.high }s </p>
+                        <p> Last Medium frequency packet <br/> { ( timer.medium > 50 )?'+50':timer.medium }s </p>
                 </div>
                 <div ref={ParentDivToggle} style={{ display: 'flex', alignItems: 'center', width: '150px', justifyContent: 'space-around' }}>
                     <label> Record data </label>

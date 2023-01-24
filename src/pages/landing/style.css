@@ -1,4 +1,4 @@
-.Landing form {
+.Landing>div {
     width: 500px;
     height: 500px;
 
@@ -14,13 +14,22 @@
     justify-content: space-around;
 }
 
-.Landing form div {
+.Landing >div div {
     display: flex;
     flex-direction: column;
 }
 
-.Landing form div button {
+.Landing >div .buttonContainer {
+    display: flex;
+    flex-direction: row;
+
+    justify-content: space-between;
+}
+
+.Landing >div div button {
     padding: 7px;
     border-radius: 20px;
     border: solid black 1px;
+
+    width: 200px;
 }
