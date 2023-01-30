@@ -24,8 +24,11 @@ const Redirecting = () => {
                     ({ status }) => {
                         if ( status === 200 ) { window.location.replace("http://whistleblower.local/"); }
                     }
-                );
+                )
+                .catch( e => console.log(e));
             }, 5000);
+
+            return () => clearInterval( interval );
         }
 
     }, [client] );

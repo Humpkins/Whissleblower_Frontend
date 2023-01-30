@@ -4,6 +4,7 @@ import NavigationArrow from "../../assets/navigationArrow.png";
 import "./style.css";
 
 import { useJsApiLoader, GoogleMap, MarkerF, CircleF, /*Autocomplete,*/ DirectionsRenderer } from "@react-google-maps/api";
+import { useEffect } from "react";
 
 const Map = ({ shouldShow, coordinates, cellCoordinates }) => {
     
@@ -12,9 +13,12 @@ const Map = ({ shouldShow, coordinates, cellCoordinates }) => {
         libraries: ['places']
     });
 
-    const [ map, setMap ] = useState( /** @type google.maps.Map */ (null));
+    // const [ map, setMap ] = useState( /** @type google.maps.Map */ (null));
+    const MyMap = useRef(/** @type google.maps.Map */ (null));
 
     const [ directionsResponse, setDirectionsResponse ] = useState(null);
+
+    const [ center, setCenter ] = useState( coordinates );
 
     const originRef = useRef();
     const destinationRef = useRef();
@@ -60,7 +64,8 @@ const Map = ({ shouldShow, coordinates, cellCoordinates }) => {
 
             { (isLoaded) &&
                 <GoogleMap
-                    // center={coordinates}
+                    center = { center }
+                    onDragEnd = { () => ( MyMap.current ) && setCenter( MyMap.current.getCenter().toJSON() ) }
                     zoom={15}
                     mapContainerStyle={{ width: '100%', height: '100%' }}
                     options={{
@@ -68,7 +73,7 @@ const Map = ({ shouldShow, coordinates, cellCoordinates }) => {
                         mapTypeControl: false,
                         streetViewControl: false
                     }}
-                    onLoad={ (MyMap) => setMap(MyMap) }
+                    onLoad={ (map) => { MyMap.current = map } }
                 >
                     <MarkerF
                         position={coordinates}
@@ -104,7 +109,7 @@ const Map = ({ shouldShow, coordinates, cellCoordinates }) => {
                 <div className="buttonGroup">
                     <button onClick={calculateRoute}> Search </button>
                     <button onClick={clearRoute}> Clear </button>
-                    <button onClick={ () => map.panTo( coordinates ) }> Center </button>
+                    <button onClick={ () => MyMap.current.panTo( coordinates ) }> Center </button>
                 </div>
             </div>
         </div>

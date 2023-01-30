@@ -66,7 +66,8 @@ const Dash = () => {
     });
     const [ highHistory, setHighHistory ] = useState([]);
 
-    const [ pendingResponse, setPendingReponse ] = useState(false);
+    const pendingResponseRef = useRef(true);
+    const [ pendingResponse, setPendingReponse ] = useState(true);
 
     //  Last received message states
     const [ lastHighFreqTime, setLastHighTime ] = useState(null);
@@ -127,10 +128,16 @@ const Dash = () => {
         }
     },[mediumFreq]);
 
-    const [ client, setClient ] = useState(null);
-    useEffect( () => setClient( mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } ) ), [] );
 
     //  Subscribe to topics
+    const [ client, setClient ] = useState(null);
+    //  EventListener for disable Whissleblowing service beforeUnload
+    const handleTabClose = ( e ) => {
+        e.preventDefault();
+        client.publish( `${clientID}/Are_u_talking_to_me?`, "goSleep" );
+        return (e.returnValue = 'Are you sure you want to exit?');
+    }
+    useEffect( () => setClient( mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } ) ), [] );
     useEffect( () => {
         // const client = mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } );
 
@@ -161,7 +168,10 @@ const Dash = () => {
                         break;
 
                     case `${clientID}/Are_u_talking_to_me?`:
-                        if ( payload.toString() == 'Yes master! Resuming the message system' ) setPendingReponse(false);
+                        if ( payload.toString() == 'Yes master! Resuming the message system' ) {
+                            console.log( "PendingResponse is now equal to false" );
+                            setPendingReponse(false);
+                        }
                         break;
 
                     default:
@@ -173,16 +183,8 @@ const Dash = () => {
 
             client.publish( `${clientID}/Are_u_talking_to_me?`, "getUp!" );
 
-            setPendingReponse(true);
-
             //  Periodically sends heatbeat signal to microcontroller, so it knows that there is someone still watching the incomming mqtt packets
             Period = setInterval( () =>  client.publish( `${clientID}/Heartbeat`, "1" ), 5000);
-        }
-
-        const handleTabClose = ( e ) => {
-            e.preventDefault();
-            client.publish( `${clientID}/Are_u_talking_to_me?`, "goSleep" );
-            return (e.returnValue = 'Are you sure you want to exit?');
         }
 
         window.addEventListener('beforeunload', handleTabClose );
@@ -196,9 +198,27 @@ const Dash = () => {
 
     }, [client]);
 
+    //  Check if the ESP successfully turned on the Whissleblowing service.
+    useEffect( () => { pendingResponseRef.current = pendingResponse; }, [ pendingResponse ]);
+    useEffect( () => {
+        const timeout = setTimeout( () => {
+            if ( pendingResponseRef.current ) {
+                alert("The ESP client probablly didn't listened to the wake command. Restarting the system");
+                window.removeEventListener('beforeunload', handleTabClose);
+                window.history.back();
+            }
+        }, 15000 );
+
+        return () => clearTimeout(timeout);
+    }, []);
+
     //  Recording Toggle refs
-    var ToggleRecordRef = useRef();
-    var ParentDivToggle = useRef();
+    const ToggleRecordRef = useRef();
+    const ParentDivToggle = useRef();
+
+    const RecordingRef = useRef( highFreq.recording );
+    useEffect( ()=> { RecordingRef.current = highFreq.recording }, [ highFreq.recording ]);
+    
 
     const handdleToggleRecording = (e) => {
 
@@ -210,15 +230,17 @@ const Dash = () => {
 
             //  Fix the toggle value for the desired state for 5 seconds
             ToggleRecordRef.current.state.checked = e.target.checked;
-            setTimeout( () => {
+            const timeout = setTimeout( () => {
                 //  Return to the real state value as well for the input element
-                ToggleRecordRef.current.state.checked = ParentDivToggle.current.children[1].children[2].checked = highFreq.recording;
+                ToggleRecordRef.current.state.checked = ParentDivToggle.current.children[1].children[2].checked = RecordingRef.current;
 
                 //  Sets the propper toggle style
-                (highFreq.recording)
+                (RecordingRef.current)
                     ?( ParentDivToggle.current.children[1].className = "react-toggle react-toggle--checked" )
                     :( ParentDivToggle.current.children[1].className = "react-toggle" );
             }, 10000 );
+
+            return timeout;
         }
     };
 
@@ -238,7 +260,10 @@ const Dash = () => {
     const handdleRefreshESP = (e) => client  && client.publish(`${clientID}/Are_u_talking_to_me?`, "resetUrSelf");
 
     //  Change state of the Recording toggle every time highFreq.recording changes
-    useEffect(() => handdleToggleRecording({ target: { checked: highFreq.recording }}), [highFreq.recording]);
+    useEffect(() => {
+        const timeout = handdleToggleRecording({ target: { checked: highFreq.recording }});
+        return () => clearTimeout(timeout);
+    }, [highFreq.recording]);
 
     return(
         <div className='dash' >
