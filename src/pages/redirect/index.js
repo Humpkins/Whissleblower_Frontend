@@ -13,19 +13,31 @@ const Redirecting = () => {
     const { state: { clientID } } = useLocation();
 
     const [ client, setClient ] = useState(null);
-    useEffect( () => setClient( mqtt.connect( `ws://${process.env.REACT_APP_MQTT_HOST}/mqtt`, { port: 8000 } ) ), [] );
+    useEffect( () => setClient( mqtt.connect(
+        {
+            protocol: 'ws',
+            hostname: process.env.REACT_APP_MQTT_HOST,
+            port: process.env.REACT_APP_MQTT_PORT,
+            clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
+            username: process.env.REACT_APP_MQTT_USER,
+            password: process.env.REACT_APP_MQTT_PWD
+        }
+    ) ), [] );
 
     useEffect( () => {
         if ( client ) {
-            client.publish( `${clientID}/Are_u_talking_to_me?`, "bringServerUp" );
+            client.publish( `Whistleblower/${clientID}/Are_u_talking_to_me?`, "bringServerUp" );
             const interval = setInterval( () => {
                 fetch("http://whistleblower.local/isServerUp", { method: 'GET'})
                 .then(
-                    ({ status }) => {
-                        if ( status === 200 ) { window.location.replace("http://whistleblower.local/"); }
+                    (response) => {
+                        console.log(response);
+                        if ( response.status === 200 ) { window.location.replace("http://whistleblower.local/"); }
                     }
                 )
-                .catch( e => console.log(e));
+                .catch( e => {
+                    window.location.replace("http://whistleblower.local/");
+                });
             }, 5000);
 
             return () => clearInterval( interval );

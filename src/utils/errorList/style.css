@@ -1,0 +1,49 @@
+.ErrorList {
+    height: 100%;
+}
+
+.ErrorList >h3 {
+    padding: 5px    1px;
+    display: flex;
+    justify-content: end;
+}
+
+.ErrorList ul {
+    display: flex;
+    flex-direction: column;
+    border-radius: 20px;
+
+    background: white;
+    height: 100%;
+}
+
+.ErrorList ul li:first-child {
+    border-radius: 20px 20px 0 0;
+}
+
+.ErrorList ul li:last-child {
+    border-radius: 0 0 20px 20px;
+}
+
+.ErrorList ul li {
+    display: grid;
+    padding: 10px;
+    grid-template-columns: 1fr 1fr 1fr;
+    transition: filter 0.3s;
+}
+
+.ErrorList ul li:hover {
+    filter: brightness(70%);
+}
+
+.ErrorList .errorPLaceholder {
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: white;
+    color: rgba(0, 0, 0, 0.5);
+    border-radius: 20px;
+}

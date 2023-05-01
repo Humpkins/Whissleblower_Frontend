@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from "react-router-dom";
+import WhistleblowerTopics from '../../utils/onlineList';
 import './style.css';
 
 const Landing = () => {
@@ -36,11 +37,12 @@ const Landing = () => {
                     <input type={'text'} value={name} onChange={ (e) => setName( e.target.value ) } />
                 </div>
                 <div className='buttonContainer'>
-                    <button onClick={ e => goDash(e) } > Reatime data </button>
+                    <button onClick={ e => goDash(e) } > Realtime data </button>
                     <button onClick={ e => goESPServer(e) } > Fileserver </button>
                 </div>
-
+                
             </div>
+            <WhistleblowerTopics setSelected={setName} />
         </div>
     );
 }

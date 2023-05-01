@@ -1,0 +1,44 @@
+.onlines {
+    height: 250px !important;
+    width: 300px !important;
+
+    border-radius: 20px;
+
+    overflow-y: scroll;
+
+    position: sticky !important;
+    margin: 0 !important;
+    bottom: 5px;
+
+    display: grid !important;
+    grid-template-rows: 1fr 5fr;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+  
+::-webkit-scrollbar-thumb {
+background-color: #ccc;
+border-radius: 10px;
+}
+
+.onlines .onlineList {
+    display: flex;
+    flex-direction: column;
+    padding: 10px 0;
+    
+    list-style: none;
+}
+
+.onlines .onlineList li {
+    border-radius: 5px;
+    background: white;
+    padding: 20px 10px;
+    transition: filter 0.3s;
+}
+
+.onlines .onlineList li:hover {
+    filter: brightness(70%);
+    cursor: pointer;
+}

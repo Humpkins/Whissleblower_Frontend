@@ -6,7 +6,7 @@
         "pitch gyro"
         "gauge battery"
         "gauge signal"
-        "mapa mapa";
+        "mapa errorList";
     grid-template-columns: 1fr 1fr;
     grid-template-rows: .1fr 1.5fr 1fr 1fr 2fr;
     width: 80%;
