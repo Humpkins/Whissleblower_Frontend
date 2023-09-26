@@ -12,7 +12,7 @@ const WhistleblowerTopics = ({ setSelected }) => {
             protocol: 'ws',
             hostname: process.env.REACT_APP_MQTT_HOST,
             port: process.env.REACT_APP_MQTT_PORT,
-            clientId: "WebClient_" + Math.random().toString(16).substr(2, 8),
+            clientId: "WebClient_" + Math.random().toString(16).substring(2, 8),
             username: process.env.REACT_APP_MQTT_USER,
             password: process.env.REACT_APP_MQTT_PWD
         }
@@ -20,7 +20,13 @@ const WhistleblowerTopics = ({ setSelected }) => {
     useEffect(() => {
 
         if ( client ) {
+            client.on('error', (err) => {
+                console.error('Connection error: ', err);
+                client.end();
+            });
+
             client.on('connect', () => {
+                console.log("Connected to " + process.env.REACT_APP_MQTT_HOST + ":" + process.env.REACT_APP_MQTT_PORT.toString());
                 client.subscribe("Whistleblower/#");
             });
     
@@ -48,7 +54,7 @@ const WhistleblowerTopics = ({ setSelected }) => {
 
     //  Force render in time interval
     useEffect(()=> {
-        const Period = setInterval( () => setTopics( topics => topics.filter( topico => (Date.now() - topico.time < 15000) ) ), 1000 );
+        const Period = setInterval( () => setTopics( topics => topics.filter( topico => (Date.now() - topico.time < 20000) ) ), 1000 );
         return () => clearInterval(Period);
     }, );
 

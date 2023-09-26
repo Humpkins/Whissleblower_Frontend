@@ -10,7 +10,7 @@ const Redirecting = () => {
         fontSize: '50px'
     };
 
-    const { state: { clientID } } = useLocation();
+    const { state: { clientID, ap } } = useLocation();
 
     const [ client, setClient ] = useState(null);
     useEffect( () => setClient( mqtt.connect(
@@ -26,7 +26,7 @@ const Redirecting = () => {
 
     useEffect( () => {
         if ( client ) {
-            client.publish( `Whistleblower/${clientID}/Are_u_talking_to_me?`, "bringServerUp" );
+            client.publish( `Whistleblower/${clientID}/Are_u_talking_to_me?`, (ap)?"bringServerUp_AP":"bringServerUp_STA" );
             const interval = setInterval( () => {
                 fetch("http://whistleblower.local/isServerUp", { method: 'GET'})
                 .then(

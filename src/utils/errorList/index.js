@@ -61,7 +61,7 @@ const error_description = [
 
 const ErrorList = ({ list }) => {
     const outLis = Object.keys(list)
-        .flatMap( 
+        .flatMap(
             device => Object.keys(list[device])
                 .filter( deviceKeys => list[device][deviceKeys] === 1 )
                 .map( filteredDeviceList => ({

@@ -262,6 +262,8 @@ const Dash = () => {
 
             client.on( 'connect', () => {
                 
+                console.log("Connected to " + process.env.REACT_APP_MQTT_HOST + ":" + process.env.REACT_APP_MQTT_PORT.toString());
+                
                 client.subscribe(`Whistleblower/${clientID}/Are_u_talking_to_me?`, { qos: 0 }, (error) => (error) && console.log(error));
                 client.subscribe(`Whistleblower/${clientID}/MediumFrequency`, { qos: 0 }, (error) => (error) && console.log(error));
                 client.subscribe(`Whistleblower/${clientID}/HighFrequency`, { qos: 0 }, (error) => (error) && console.log(error));
@@ -379,17 +381,17 @@ const Dash = () => {
 
                     case `Whistleblower/${clientID}/MCU_ERR`:
                         const incommingMCUERR = payload.toString();
-                        setErrorList( prevErr => ({ ...prevErr, MCU: JSON.parse(incommingMCUERR) }) );
+                        if ( incommingMCUERR !== 'null' ) setErrorList( prevErr => ({ ...prevErr, MCU: JSON.parse(incommingMCUERR) }) );
                         break;
 
                     case `Whistleblower/${clientID}/BMS1_ERR`:
                         const incommingBMS1ERR = payload.toString();
-                        setErrorList( prevErr => ({ ...prevErr, BMS1: JSON.parse(incommingBMS1ERR) }) );
+                        if ( incommingBMS1ERR !== 'null' ) setErrorList( prevErr => ({ ...prevErr, BMS1: JSON.parse(incommingBMS1ERR) }) );
                         break;
 
                     case `Whistleblower/${clientID}/BMS2_ERR`:
                         const incommingBMS2ERR = payload.toString();
-                        setErrorList( prevErr => ({ ...prevErr, BMS2: JSON.parse(incommingBMS2ERR) }) );
+                        if ( incommingBMS2ERR !== 'null' ) setErrorList( prevErr => ({ ...prevErr, BMS2: JSON.parse(incommingBMS2ERR) }) );
                         break;
 
                     //  Get notified that module started the Wisseblowing service
@@ -426,17 +428,17 @@ const Dash = () => {
 
     //  Check if the ESP successfully turned on the Whissleblowing service.
     useEffect( () => { pendingResponseRef.current = pendingResponse; }, [ pendingResponse ]);
-    useEffect( () => {
-        const timeout = setTimeout( () => {
-            if ( pendingResponseRef.current ) {
-                alert("The ESP client probablly didn't listened to the wake command. Restarting the system");
-                window.removeEventListener('beforeunload', handleTabClose);
-                window.history.back();
-            }
-        }, 15000 );
+    // useEffect( () => {
+    //     const timeout = setTimeout( () => {
+    //         if ( pendingResponseRef.current ) {
+    //             alert("The ESP client probablly didn't listened to the wake command. Restarting the system");
+    //             window.removeEventListener('beforeunload', handleTabClose);
+    //             window.history.back();
+    //         }
+    //     }, 15000 );
 
-        return () => clearTimeout(timeout);
-    }, []);
+    //     return () => clearTimeout(timeout);
+    // }, []);
 
     //  Recording Toggle refs
     const ToggleRecordRef = useRef();

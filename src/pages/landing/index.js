@@ -16,13 +16,13 @@ const Landing = () => {
             navigate('\dash', { state: { clientID: name } });
     }
 
-    const goESPServer = ( e ) => {
+    const goESPServer = ( e, ap ) => {
         e.preventDefault();
 
         if ( name === '' )
             alert('O nome do dispositivo deve ser preenchido antes de prosseguir');
         else {
-            navigate('\ESPServerRedirect', { state: { clientID: name } })
+            navigate('\ESPServerRedirect', { state: { clientID: name, ap } });
         }
 
     }
@@ -38,7 +38,8 @@ const Landing = () => {
                 </div>
                 <div className='buttonContainer'>
                     <button onClick={ e => goDash(e) } > Realtime data </button>
-                    <button onClick={ e => goESPServer(e) } > Fileserver </button>
+                    <button onClick={ e => goESPServer(e, true) } > AccessPoint </button>
+                    <button onClick={ e => goESPServer(e, false) } > Station </button>
                 </div>
                 
             </div>
